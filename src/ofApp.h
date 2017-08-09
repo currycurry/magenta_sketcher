@@ -68,7 +68,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
     
     
         int tonic;
-        vector<int> notes;
+        vector<int> notes, scale_notes;
     
         vector<vector<ofRectangle>> matrix;
         vector<vector<bool>> pressed;
@@ -114,6 +114,8 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
         float bpm;
     
         LoopPlaybackThread loopPlayer;
+    
+        int line_position;
     
         
     

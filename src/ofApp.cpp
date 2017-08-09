@@ -8,9 +8,8 @@ void ofApp::setup(){
     ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetCircleResolution(120);
     bFullscreen = false;
-
     
-    ///////////////In
+    ///////////////Midi In
     // print input ports to console
     midiIn.listPorts(); // via instance
     //ofxMidiIn::listPorts(); // via static as well
@@ -89,27 +88,34 @@ void ofApp::setup(){
      A# = 46;
      B = 47;*/
 
-    notes.resize( max_num_notes );
+    scale_notes.resize( max_num_notes );
     
-
     
     //pentatonic
     for ( int i = 0; i < max_num_notes; i ++ ) {
         if ( i % 5 == 0 ) {
-            notes[ i ] = tonic + 12 * floor( i / 5 );
+            scale_notes[ i ] = tonic + 12 * floor( i / 5 );
         }
         if ( i % 5 == 1 ) {
-            notes[ i ] = tonic + 12 * floor( i / 5 ) + 2;
+            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 2;
         }
         if ( i % 5 == 2 ) {
-            notes[ i ] = tonic + 12 * floor( i / 5 ) + 4;
+            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 4;
         }
         if ( i % 5 == 3 ) {
-            notes[ i ] = tonic + 12 * floor( i / 5 ) + 7;
+            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 7;
         }
         if ( i % 5 == 4 ) {
-            notes[ i ] = tonic + 12 * floor( i / 5 ) + 9;
+            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 9;
         }
+        cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
+    }
+    
+    notes.resize( num_notes );
+    for ( int i = 0; i < num_notes; i ++ ) {
+        notes[ i ] = scale_notes[ num_notes - 1 - i ];
+        cout << "notes: " << notes[ i ] << ", " << endl;
+
     }
     
     sketch_margin = 5;
@@ -138,7 +144,6 @@ void ofApp::setup(){
     box_size.x = ( matrix_container.getWidth() - box_spacing * ( num_hits - 1 ) ) / num_hits;
     box_size.y = ( matrix_container.getHeight() - box_spacing * ( num_notes - 1 ) ) / num_notes;
     
-    
     matrix_width = box_size.x * num_hits + box_spacing * ( num_hits - 1 );
     matrix_height = box_size.y * num_notes + box_spacing * ( num_notes - 1 );
     
@@ -146,17 +151,26 @@ void ofApp::setup(){
 
     matrix_pos.set(( matrix_container.getWidth() - matrix_width ) / 2, ( matrix_container.getHeight() - matrix_height ) / 2 );
     
+    box_color.resize( max_num_hits, vector<ofColor>( max_num_notes, off_color) );
+    
     for ( int i = 0; i < num_hits; i ++ ) {
         for ( int j = 0; j < num_notes; j ++ ) {
             matrix[ i ][ j ].setPosition( matrix_pos.x + i * ( box_size.x + box_spacing ), matrix_pos.y + j * ( box_size.y + box_spacing ));
             matrix[ i ][ j ].setSize( box_size.x, box_size.y );
+            
+            if ( i % hits_per_beat == 0 ) {
+                box_color[ i ][ j ] = downbeat_off_color;
+            }
+            else {
+                box_color[ i ][ j ] = off_color;
+            }
+
             
         }
     }
     
     pressed.resize( max_num_hits, vector<bool>( max_num_notes, false ));
     _pressed.resize( max_num_hits, vector<bool>( max_num_notes, false ));
-    box_color.resize( max_num_hits, vector<ofColor>( max_num_notes, off_color) );
     
     bClear = true;
     bSave = false;
@@ -185,16 +199,11 @@ void ofApp::setup(){
     gui2->loadSettings("gui2Settings.xml");
     
     bPlayLoop = false;
-    //loopPlayer.startThread();
-
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     ofSetFullscreen( bFullscreen );
-    
-
-
     
     if ( bPlayLoop ) {
         if ( !_bPlayLoop ) {
@@ -205,7 +214,7 @@ void ofApp::update(){
         
     }
     else if ( !bPlayLoop && _bPlayLoop ) {
-        loopPlayer.stopThread();
+        loopPlayer.stop();
         cout << "stopThread" << endl;
 
     }
@@ -214,11 +223,8 @@ void ofApp::update(){
     // check when grid is resized
     if ( _num_notes != num_notes || _num_hits != num_hits ) {
         cout << "num_notes changed" << endl;
-        notes.resize( num_notes );
         midi_codes.clear();
         midi_codes.resize( num_hits, "( " );
-        //matrix.clear();
-        //matrix.resize( num_hits, vector<ofRectangle>( num_notes ) );
         
         box_spacing = 2;
         box_size.x = ( matrix_container.getWidth() - box_spacing * ( num_hits - 1 ) ) / num_hits;
@@ -234,8 +240,30 @@ void ofApp::update(){
                 matrix[ i ][ j ].setPosition( matrix_pos.x + i * ( box_size.x + box_spacing ), matrix_pos.y + j * ( box_size.y + box_spacing ));
                 matrix[ i ][ j ].setSize( box_size.x, box_size.y );
                 
+                if ( pressed[ i ][ j ] ) {
+                    box_color[ i ][ j ] = on_color;
+                }
+                
+                if ( !pressed[ i ][ j ] ) {
+                    if ( i % hits_per_beat == 0 ) {
+                        box_color[ i ][ j ] = downbeat_off_color;
+                    }
+                    else {
+                        box_color[ i ][ j ] = off_color;
+                    }
+                }
+                
             }
         }
+        
+        notes.clear();
+        notes.resize( num_notes );
+        for ( int i = 0; i < num_notes; i ++ ) {
+            notes[ i ] = scale_notes[ num_notes - 1 - i ];
+            cout << "notes: " << notes[ i ] << ", " << endl;
+            
+        }
+        
         loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, midiOut );
 
     }
@@ -257,6 +285,7 @@ void ofApp::update(){
             }
         }
         midi_codes[ i ] += " )";
+        loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, midiOut );
     }
     
     //clear sketch and matrix
@@ -264,6 +293,7 @@ void ofApp::update(){
         for ( int i = 0; i < num_hits; i ++ ) {
             for ( int j = 0; j < num_notes; j ++ ) {
                 box_color[ i ][ j ] = off_color;
+                
                 pressed[ i ][ j ] = false;
             }
         }
@@ -333,16 +363,9 @@ void ofApp::draw(){
     
     ofSetColor( 255 );
     fbo_matrix.draw( matrix_container );
+    //fbo_matrix.draw( matrix_container.getMinX(), matrix_container.getMaxY(), matrix_container.getWidth(), -matrix_container.getHeight());
     fbo_sketch.draw( sketch_container );
     
-    /*for( int i = 0; i < num_hits; i ++ ) {
-        ofSetColor( 0, 255, 255 );
-        ofDrawBitmapString( midi_codes[ i ], matrix_container.getMinX(), matrix[ i ][ num_notes - 1 ].y + matrix[ i ][ num_notes - 1 ].height + ( i + 1) * 20);
-    }
-    
-    for( int i = 0; i < num_hits; i ++ ) {
-        midi_codes[ i ] = "( ";
-    }*/
     
     ofSetColor( 255 );
     for ( int i = 0; i < saved_sketch.size(); i ++ ) {
@@ -473,6 +496,17 @@ void ofApp::drawMidiDebug() {
     << "touch: " << touch << endl
     << "polytouch: " << polytouch;
     ofDrawBitmapString(outText.str(), 214, ofGetHeight()/2);
+    
+    
+    for( int i = 0; i < num_hits; i ++ ) {
+        ofSetColor( 0, 255, 255 );
+        ofDrawBitmapString( midi_codes[ i ], matrix_container.getMinX(), matrix[ i ][ num_notes - 1 ].y + matrix[ i ][ num_notes - 1 ].height + ( i + 1) * 20);
+    }
+    
+    for( int i = 0; i < num_hits; i ++ ) {
+        midi_codes[ i ] = "( ";
+    }
+
 }
 //--------------------------------------------------------------
 void ofApp::exit() {
@@ -484,7 +518,7 @@ void ofApp::exit() {
     midiOut.closePort();
     
     gui1->saveSettings("gui1Settings.xml");
-    //loopPlayer.stopThread();
+    loopPlayer.stop();
 
 }
 
@@ -545,13 +579,12 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
         ofxUIToggle *toggle = (ofxUIToggle *) e.getToggle();
         bErase = toggle->getValue();
         
-        if ( bErase ) {
+        //if ( bErase ) {
             fbo_sketch.readToPixels( temp_pixels );
             temp_texture.clear();
-            
             temp_texture.loadData( temp_pixels );
             paths.clear();
-        }
+        //}
     }
     
     else if(name == "PLAY LOOP")
@@ -610,7 +643,7 @@ void ofApp::setGUI2()
     //cout << "max_num_notes, max_num_hits: ( " << max_num_notes << ", " << max_num_hits << " )" << endl;
     gui2->addIntSlider( "BARS PER LOOP", 1, 4, &bars_per_loop );
     gui2->addIntSlider( "BEATS PER BAR", 1, 8, &beats_per_bar );
-    gui2->addIntSlider( "HITS PER BAR", 1, 8, &hits_per_beat );
+    gui2->addIntSlider( "HITS PER BEAT", 1, 8, &hits_per_beat );
     //gui2->addIntSlider( "BEATS IN LOOP", 4, max_num_hits, &num_hits );
     
     gui2->addSpacer();
@@ -700,7 +733,7 @@ void ofApp::mouseDragged(int x, int y, int button){
                     }
                     
                     if ( !pressed[ i ][ j ] ) {
-                        if ( i % hits_per_beat ==0 ) {
+                        if ( i % hits_per_beat == 0 ) {
                             box_color[ i ][ j ] = downbeat_off_color;
                         }
                         else {
@@ -773,7 +806,8 @@ void ofApp::mousePressed(int x, int y, int button){
                     }
                     else {
                         box_color[ i ][ j ] = off_color;
-                    }                }
+                    }
+                }
                 
             }
         }

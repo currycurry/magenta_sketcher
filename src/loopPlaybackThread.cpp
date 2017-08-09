@@ -9,13 +9,6 @@
 #include <stdio.h>
 #include "loopPlaybackThread.h"
 
-/*LoopPlaybackThread::LoopPlaybackThread()
-:newFrame(true) {
-    // start the thread as soon as the
-    // class is created, it won't use any CPU
-    // until we send a new frame to be analyzed
-    startThread();
-}*/
 void LoopPlaybackThread::start( int h, int n, int i, int c, vector<vector<bool>> p, vector<int> no, ofxMidiOut mi ) {
     num_hits = h;
     num_notes = n;
@@ -49,7 +42,6 @@ void LoopPlaybackThread::threadedFunction() {
                     midiOut.sendNoteOn( channel, notes[ j ], 100 );
                 }
             }
-            //cout << "threaded playback" << endl;
             ofSleepMillis( hit_interval );
         }
     }
