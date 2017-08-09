@@ -9,21 +9,28 @@
 #include <stdio.h>
 #include "loopPlaybackThread.h"
 
-void LoopPlaybackThread::start( int h, int n, int i, int c, vector<vector<bool>> p, vector<int> no, ofxMidiOut mi ) {
+void LoopPlaybackThread::start( int h, int n, int i, int c, vector<vector<bool>> p, vector<int> no, vector<vector<ofRectangle>> mat, ofxMidiOut mi ) {
     num_hits = h;
     num_notes = n;
     hit_interval = i;
     channel = c;
     pressed = p;
     notes = no;
+    matrix = mat;
     midiOut = mi;
+    
+    playX = matrix[ 0 ][ 0 ].getX();
+    playY = matrix[ 0 ][ 0 ].getY();
+    playW = matrix[ 0 ][ 0 ].getWidth();
+    playH = ( matrix[ 0 ][ 0 ].getHeight() + 2 ) * num_notes;
     startThread();
 }
 
 void LoopPlaybackThread::stop() {
     stopThread();
 }
-void LoopPlaybackThread::update( int h, int n, int i, int c, vector<vector<bool>> p, vector<int> no, ofxMidiOut mi ) {
+
+void LoopPlaybackThread::update( int h, int n, int i, int c, vector<vector<bool>> p, vector<int> no, vector<vector<ofRectangle>> mat, ofxMidiOut mi ) {
     num_hits = h;
     num_notes = n;
     hit_interval = i;
@@ -31,12 +38,19 @@ void LoopPlaybackThread::update( int h, int n, int i, int c, vector<vector<bool>
     pressed = p;
     notes = no;
     midiOut = mi;
+    matrix = mat;
+    playW = matrix[ 0 ][ 0 ].getWidth();
+}
 
+void LoopPlaybackThread::draw() {
+    ofSetColor( 255, 0, 255, 100 );
+    ofDrawRectangle( playX, playY, playW, playH );
 }
 
 void LoopPlaybackThread::threadedFunction() {
     while ( isThreadRunning() ) {
         for ( int i = 0; i < num_hits; i ++ ) {
+            playX = matrix[ i ][ 0 ].getX();
             for ( int j = 0; j < num_notes; j ++ ) {
                 if ( pressed[ i ][ j ] ) {
                     midiOut.sendNoteOn( channel, notes[ j ], 100 );

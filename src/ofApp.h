@@ -96,7 +96,9 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
     
         ofFbo fbo_sketch;
         ofRectangle sketch_container;
-        bool draw_sketch, _draw_sketch;
+        vector<ofRectangle> saved_sketch_container;
+        bool draw_sketch, _draw_sketch, bLoadSketch, bSketchSelected;
+        int selected_sketch;
     
         vector<ofPolyline> paths;
         ofPolyline current_path;

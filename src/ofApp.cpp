@@ -72,21 +72,20 @@ void ofApp::setup(){
     off_color = ofColor( 50 );
     on_color = ofColor( 255 );
     downbeat_off_color = ofColor( 75 );
-    play_color = ofColor::magenta;
     
     tonic = 48;
-    /*C = 36;
-     C# = 37;
-     D = 38;
-     D# = 39;
-     E = 40;
-     F = 41;
-     F# = 42;
-     G = 43;
-     G# = 44
-     A = 45;
-     A# = 46;
-     B = 47;*/
+    /*C = 48;
+     C# = 49;
+     D = 50;
+     D# = 51;
+     E = 52;
+     F = 53;
+     F# = 54;
+     G = 55;
+     G# = 56;
+     A = 57;
+     A# = 58;
+     B = 59;*/
 
     scale_notes.resize( max_num_notes );
     
@@ -119,11 +118,19 @@ void ofApp::setup(){
     }
     
     sketch_margin = 5;
+    box_spacing = 2;
     offset = 214;
     
     sketch_container.setPosition( offset + sketch_margin, sketch_margin );
     sketch_container.setWidth( (ofGetWidth() - offset) / 2 - sketch_margin * 2 );
     sketch_container.setHeight( sketch_container.getWidth() * num_notes / num_hits );
+    
+    saved_sketch_container.resize( 8 );
+    for ( int i = 0; i < saved_sketch_container.size(); i ++ ) {
+        saved_sketch_container[ i ].setPosition( sketch_container.x + i % 4 * (( sketch_container.width - 3 * box_spacing ) / 4 + box_spacing), sketch_container.getHeight() + sketch_margin * 2 + floor( i / 4 ) * ( sketch_container.height / 4 + 2 ) );
+        saved_sketch_container[ i ].setWidth(( sketch_container.width - 3 * box_spacing ) / 4);
+        saved_sketch_container[ i ].setHeight( sketch_container.height / 4 );
+    }
     
     fbo_sketch.allocate( sketch_container.width, sketch_container.height, GL_RGBA );
     fbo_sketch.begin();
@@ -140,9 +147,11 @@ void ofApp::setup(){
     ofClear( 255, 255, 255 );
     fbo_sketch.end();
     
-    box_spacing = 2;
+
     box_size.x = ( matrix_container.getWidth() - box_spacing * ( num_hits - 1 ) ) / num_hits;
     box_size.y = ( matrix_container.getHeight() - box_spacing * ( num_notes - 1 ) ) / num_notes;
+    
+
     
     matrix_width = box_size.x * num_hits + box_spacing * ( num_hits - 1 );
     matrix_height = box_size.y * num_notes + box_spacing * ( num_notes - 1 );
@@ -175,6 +184,7 @@ void ofApp::setup(){
     bClear = true;
     bSave = false;
     bSketch = true;
+    bLoadSketch = false;
     bErase = false;
     _bErase = false;
     
@@ -207,7 +217,7 @@ void ofApp::update(){
     
     if ( bPlayLoop ) {
         if ( !_bPlayLoop ) {
-            loopPlayer.start( num_hits, num_notes, hit_interval, channel, pressed, notes, midiOut );
+            loopPlayer.start( num_hits, num_notes, hit_interval, channel, pressed, notes, matrix, midiOut );
             cout << "startThread" << endl;
 
         }
@@ -260,11 +270,11 @@ void ofApp::update(){
         notes.resize( num_notes );
         for ( int i = 0; i < num_notes; i ++ ) {
             notes[ i ] = scale_notes[ num_notes - 1 - i ];
-            cout << "notes: " << notes[ i ] << ", " << endl;
+            //cout << "notes: " << notes[ i ] << ", " << endl;
             
         }
         
-        loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, midiOut );
+        loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, matrix, midiOut );
 
     }
     
@@ -285,14 +295,19 @@ void ofApp::update(){
             }
         }
         midi_codes[ i ] += " )";
-        loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, midiOut );
+        loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, matrix, midiOut );
     }
     
     //clear sketch and matrix
     if ( bClear == true ) {
         for ( int i = 0; i < num_hits; i ++ ) {
             for ( int j = 0; j < num_notes; j ++ ) {
-                box_color[ i ][ j ] = off_color;
+                if ( i % hits_per_beat ==0 ) {
+                    box_color[ i ][ j ] = downbeat_off_color;
+                }
+                else {
+                    box_color[ i ][ j ] = off_color;
+                }
                 
                 pressed[ i ][ j ] = false;
             }
@@ -363,13 +378,18 @@ void ofApp::draw(){
     
     ofSetColor( 255 );
     fbo_matrix.draw( matrix_container );
-    //fbo_matrix.draw( matrix_container.getMinX(), matrix_container.getMaxY(), matrix_container.getWidth(), -matrix_container.getHeight());
     fbo_sketch.draw( sketch_container );
     
     
     ofSetColor( 255 );
     for ( int i = 0; i < saved_sketch.size(); i ++ ) {
-        saved_sketch[ i ].draw( sketch_container.x + i % 4 * ( sketch_container.width / 4 + 2 ), sketch_container.getHeight() + sketch_margin * 2 + floor( i / 4 ) * ( sketch_container.height / 4 + 2 ), sketch_container.width / 4, sketch_container.height / 4 );
+        saved_sketch[ i ].draw( saved_sketch_container[ i ] );
+    }
+    
+    if ( bSketchSelected ) {
+        ofSetColor( 255, 0, 255, 75 );
+        ofDrawRectangle( saved_sketch_container[ selected_sketch ]);
+        ofSetColor( 255 );
     }
     
     bClear = false;
@@ -384,6 +404,12 @@ void ofApp::drawFbo(){
     if( bClear ) {
         ofBackground( 0 );
         
+    }
+    
+    if ( bLoadSketch ) {
+        paths.clear();
+        ofBackground( 0 );
+        temp_texture.draw( 0, 0 );
     }
     
     if ( _bErase != bErase ) {
@@ -430,8 +456,13 @@ void ofApp::drawFbo(){
             ofDrawRectangle( matrix[ i ][ j ] );
         }
     }
+    if ( bPlayLoop ) {
+       loopPlayer.draw();
+    }
+    
     fbo_matrix.end();
     
+    bLoadSketch = false;
     _draw_sketch = draw_sketch;
     _bErase = bErase;
     
@@ -596,7 +627,7 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
     
     num_hits = bars_per_loop * beats_per_bar * hits_per_beat;
     hit_interval = 60000 / ( bpm * hits_per_beat ); // ms/hit
-    loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, midiOut );
+    loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, matrix, midiOut );
     
     
 }
@@ -604,49 +635,25 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
 //--------------------------------------------------------------
 void ofApp::setGUI1()
 {
-    gui1 = new ofxUISuperCanvas("MAGENTA CONTROLS");
+    gui1 = new ofxUISuperCanvas("INPUT CONTROLS");
     
     gui1->addSpacer();
+    gui1->setWidgetFontSize(OFX_UI_FONT_MEDIUM);
+    gui1->addToggle("PLAY LOOP", false, 44, 44);
     gui1->addButton("SAVE LOOP", false, 44, 44);
     gui1->addButton("CLEAR LOOP", false, 44, 44);
     gui1->addToggle("SKETCH / EDIT MIDI", true, 44, 44);
     gui1->addToggle("ERASE", false, 44, 44 );
     
     gui1->addSpacer();
-    gui1->addLabel("BPM", OFX_UI_FONT_MEDIUM);
-    gui1->addRotarySlider("BPMSLIDER", 40, 200, &bpm);
-    
-    gui1->addSpacer();
-    gui1->addLabel("TEMPERATURE", OFX_UI_FONT_MEDIUM);
-    gui1->addRotarySlider("TEMPSLIDER", 0, 100, 50 );
+    gui1->addLabel("EDIT LOOP MATRIX");
+    gui1->addIntSlider( "NOTES IN SCALE", 5, max_num_notes, &num_notes );
+    gui1->addIntSlider( "BARS PER LOOP", 1, 4, &bars_per_loop );
+    gui1->addIntSlider( "BEATS PER BAR", 1, 8, &beats_per_bar );
+    gui1->addIntSlider( "HITS PER BEAT", 1, 8, &hits_per_beat );
 
-    gui1->setPosition(0,0);
-    gui1->autoSizeToFitWidgets();
-    
-    ofAddListener(gui1->newGUIEvent,this,&ofApp::guiEvent);
-}
-//--------------------------------------------------------------
-void ofApp::setGUI2()
-{
-    gui2 = new ofxUISuperCanvas("CONTROLS");
-    gui2->addSpacer();
-    gui2->setWidgetFontSize(OFX_UI_FONT_MEDIUM);
-    
-    gui2->addToggle("PLAY LOOP", false, 44, 44);
-    //gui2->addButton("CLEAR LOOP", false, 44, 44);
-    
-    gui2->addSpacer();
-    gui2->addLabel("EDIT LOOP MATRIX");
-    gui2->addIntSlider( "NOTES IN SCALE", 5, max_num_notes, &num_notes );
-    //cout << "max_num_notes, max_num_hits: ( " << max_num_notes << ", " << max_num_hits << " )" << endl;
-    
-    //cout << "max_num_notes, max_num_hits: ( " << max_num_notes << ", " << max_num_hits << " )" << endl;
-    gui2->addIntSlider( "BARS PER LOOP", 1, 4, &bars_per_loop );
-    gui2->addIntSlider( "BEATS PER BAR", 1, 8, &beats_per_bar );
-    gui2->addIntSlider( "HITS PER BEAT", 1, 8, &hits_per_beat );
-    //gui2->addIntSlider( "BEATS IN LOOP", 4, max_num_hits, &num_hits );
-    
-    gui2->addSpacer();
+    gui1->addSpacer();
+    gui1->addLabel("EDIT SCALE", OFX_UI_FONT_MEDIUM);
     vector<string> items;
     items.push_back( "C" );
     items.push_back( "C#" );
@@ -661,7 +668,7 @@ void ofApp::setGUI2()
     items.push_back( "A" );
     items.push_back( "A#" );
     items.push_back( "B" );
-    ddl = gui2->addDropDownList("CHOOSE TONIC", items);
+    ddl = gui1->addDropDownList("CHOOSE TONIC", items);
     ddl->setAllowMultiple(false);
     
     vector<string> scale;
@@ -677,16 +684,29 @@ void ofApp::setGUI2()
     scale.push_back( "dorian" );
     scale.push_back( "ionian" );
     scale.push_back( "locrian" );
-    ddl = gui2->addDropDownList("CHOOSE SCALE", scale);
+    ddl = gui1->addDropDownList("CHOOSE MODE", scale);
     ddl->setAllowMultiple(false);
 
+    gui1->setPosition(0,0);
+    gui1->autoSizeToFitWidgets();
     
+    ofAddListener(gui1->newGUIEvent,this,&ofApp::guiEvent);
+}
+//--------------------------------------------------------------
+void ofApp::setGUI2()
+{
+    gui2 = new ofxUISuperCanvas("CONTROLS");
+    gui2->addSpacer();
+    gui2->setWidgetFontSize(OFX_UI_FONT_MEDIUM);
     
+    gui2->addLabel("BPM", OFX_UI_FONT_MEDIUM);
+    gui2->addRotarySlider("BPMSLIDER", 40, 200, &bpm);
+    
+    gui2->addSpacer();
+    gui2->addLabel("TEMPERATURE", OFX_UI_FONT_MEDIUM);
+    gui2->addRotarySlider("TEMPSLIDER", 0, 100, 50 );
 
-    
-    
-
-    gui2->setPosition( 214, 513 );
+    gui2->setPosition( 0, 505 );
     gui2->autoSizeToFitWidgets();
     
     ofAddListener(gui2->newGUIEvent,this,&ofApp::guiEvent);
@@ -702,6 +722,12 @@ void ofApp::keyPressed(int key){
         case 'f':
             bFullscreen = !bFullscreen;
             break;
+            
+        case OF_KEY_BACKSPACE:
+            if ( bSketchSelected ) {
+                saved_sketch.erase( saved_sketch.begin() + selected_sketch );
+                bSketchSelected = false;
+            }
 
     }
 
@@ -816,10 +842,25 @@ void ofApp::mousePressed(int x, int y, int button){
     
     if ( sketch_container.inside( x, y  ) ) {
         draw_sketch = true;
+        if ( bSketchSelected ) {
+            bLoadSketch = true;
+            bSketchSelected = false;
+        }
+        
     }
     else {
         draw_sketch = false;
     }
+    
+    for ( int i = 0; i < saved_sketch_container.size(); i ++ ) {
+        if ( saved_sketch_container[ i ].inside( x, y ) ) {
+            selected_sketch = i;
+            bSketchSelected = true;
+            temp_texture = saved_sketch[ i ];
+        }
+    }
+    
+
     
     _mouseX = x;
     _mouseY = y;
@@ -828,7 +869,13 @@ void ofApp::mousePressed(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-
+    
+    if ( sketch_container.inside( x, y  ) ) {
+        if ( bSketchSelected ) {
+            bLoadSketch = true;
+            bSketchSelected = false;
+        }
+    }
 }
 
 //--------------------------------------------------------------

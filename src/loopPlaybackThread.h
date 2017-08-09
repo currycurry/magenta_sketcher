@@ -18,16 +18,21 @@
 
 class LoopPlaybackThread: public ofThread {
 public:
-    void start( int, int, int, int, vector<vector<bool>>, vector<int>, ofxMidiOut );
+    void start( int, int, int, int, vector<vector<bool>>, vector<int>, vector<vector<ofRectangle>>, ofxMidiOut );
     void stop();
-    void update( int, int, int, int, vector<vector<bool>>, vector<int>, ofxMidiOut );
+    void update( int, int, int, int, vector<vector<bool>>, vector<int>, vector<vector<ofRectangle>>, ofxMidiOut );
+    void draw();
     
 private:
     void threadedFunction();
     int num_hits, num_notes, hit_interval, channel;
     vector<vector<bool>> pressed;
     vector<int> notes;
+    vector<vector<ofRectangle>> matrix;
+
     ofxMidiOut midiOut;
+    float playX, playY, playW, playH;
+    ofColor playColor;
 };
 
 #endif
