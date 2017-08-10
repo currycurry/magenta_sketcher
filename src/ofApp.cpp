@@ -89,7 +89,6 @@ void ofApp::setup(){
 
     scale_notes.resize( max_num_notes );
     
-    
     //pentatonic
     for ( int i = 0; i < max_num_notes; i ++ ) {
         if ( i % 5 == 0 ) {
@@ -147,17 +146,12 @@ void ofApp::setup(){
     ofClear( 255, 255, 255 );
     fbo_sketch.end();
     
-
     box_size.x = ( matrix_container.getWidth() - box_spacing * ( num_hits - 1 ) ) / num_hits;
     box_size.y = ( matrix_container.getHeight() - box_spacing * ( num_notes - 1 ) ) / num_notes;
     
-
-    
     matrix_width = box_size.x * num_hits + box_spacing * ( num_hits - 1 );
     matrix_height = box_size.y * num_notes + box_spacing * ( num_notes - 1 );
-    
     matrix.resize( max_num_hits, vector<ofRectangle>( max_num_notes ) );
-
     matrix_pos.set(( matrix_container.getWidth() - matrix_width ) / 2, ( matrix_container.getHeight() - matrix_height ) / 2 );
     
     box_color.resize( max_num_hits, vector<ofColor>( max_num_notes, off_color) );
@@ -181,6 +175,24 @@ void ofApp::setup(){
     pressed.resize( max_num_hits, vector<bool>( max_num_notes, false ));
     _pressed.resize( max_num_hits, vector<bool>( max_num_notes, false ));
     
+    latent_input_container.resize( 4 );
+    latent_sketch.resize( 4 );
+    for ( int i = 0; i < latent_input_container.size(); i ++ ) {
+        latent_input_container[ i ].setWidth( saved_sketch_container[ 0 ].getWidth() );
+        latent_input_container[ i ].setHeight( saved_sketch_container[ 0 ].getHeight() );
+        latent_sketch[ i ].allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), GL_RGBA );
+
+    }
+    
+    latent_container.setWidth( 400 );
+    latent_container.setHeight( latent_container.getWidth() );
+    latent_container.setPosition( ofGetWidth() - latent_input_container[ 0 ].getWidth() - sketch_margin - latent_container.getWidth(), ofGetHeight() - sketch_margin - latent_container.getHeight());
+    
+    latent_input_container[ 0 ].setPosition( latent_container.getX() - latent_input_container[ 0 ].getWidth(), latent_container.getY() );
+    latent_input_container[ 1 ].setPosition( ofGetWidth() - latent_input_container[ 1 ].getWidth() - sketch_margin, latent_container.getY() );
+    latent_input_container[ 2 ].setPosition( latent_input_container[ 1 ].getX(), latent_container.getMaxY() - latent_input_container[ 2 ].getHeight() );
+    latent_input_container[ 3 ].setPosition( latent_input_container[ 0 ].getX(), latent_input_container[ 2 ].getY() );
+
     bClear = true;
     bSave = false;
     bSketch = true;
@@ -209,6 +221,7 @@ void ofApp::setup(){
     gui2->loadSettings("gui2Settings.xml");
     
     bPlayLoop = false;
+    
 }
 
 //--------------------------------------------------------------
@@ -383,7 +396,9 @@ void ofApp::draw(){
     
     ofSetColor( 255 );
     for ( int i = 0; i < saved_sketch.size(); i ++ ) {
-        saved_sketch[ i ].draw( saved_sketch_container[ i ] );
+        if ( i < saved_sketch_container.size() ) {
+            saved_sketch[ i ].draw( saved_sketch_container[ i ] );
+        }
     }
     
     if ( bSketchSelected ) {
@@ -391,6 +406,17 @@ void ofApp::draw(){
         ofDrawRectangle( saved_sketch_container[ selected_sketch ]);
         ofSetColor( 255 );
     }
+    
+    for ( int i = 0; i < latent_input_container.size(); i ++ ) {
+        ofSetColor( 0 );
+        ofDrawRectangle( latent_input_container[ i ] );
+        ofSetColor(255);
+        latent_sketch[ i ].draw( latent_input_container[ i ] );
+    }
+    
+    ofSetColor( 50 );
+    ofDrawRectangle( latent_container );
+    ofSetColor( 255 );
     
     bClear = false;
     bSave = false;
@@ -706,7 +732,7 @@ void ofApp::setGUI2()
     gui2->addLabel("TEMPERATURE", OFX_UI_FONT_MEDIUM);
     gui2->addRotarySlider("TEMPSLIDER", 0, 100, 50 );
 
-    gui2->setPosition( 0, 505 );
+    gui2->setPosition( 0, 515 );
     gui2->autoSizeToFitWidgets();
     
     ofAddListener(gui2->newGUIEvent,this,&ofApp::guiEvent);
@@ -857,6 +883,15 @@ void ofApp::mousePressed(int x, int y, int button){
             selected_sketch = i;
             bSketchSelected = true;
             temp_texture = saved_sketch[ i ];
+        }
+    }
+    
+    for ( int i = 0; i < latent_sketch.size(); i ++ ) {
+        if ( latent_input_container[ i ].inside( x, y ) ) {
+            if ( bSketchSelected ) {
+                latent_sketch[ i ] = temp_texture;
+                bSketchSelected = false;
+            }
         }
     }
     

@@ -100,6 +100,12 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
         bool draw_sketch, _draw_sketch, bLoadSketch, bSketchSelected;
         int selected_sketch;
     
+        ofFbo fbo_latent;
+        ofRectangle latent_container;
+        vector<ofRectangle> latent_input_container;
+        vector<ofTexture> latent_sketch;
+
+    
         vector<ofPolyline> paths;
         ofPolyline current_path;
         int num_strokes;
