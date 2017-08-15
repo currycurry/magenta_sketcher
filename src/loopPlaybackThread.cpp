@@ -27,6 +27,13 @@ void LoopPlaybackThread::start( int h, int n, int i, int c, vector<vector<bool>>
 }
 
 void LoopPlaybackThread::stop() {
+    for ( int i = 0; i < num_hits; i ++ ) {
+        for ( int j = 0; j < num_notes; j ++ ) {
+            if ( pressed[ i ][ j ] ) {
+                midiOut.sendNoteOff( channel, notes[ j ]);
+            }
+        }
+    }
     stopThread();
 }
 

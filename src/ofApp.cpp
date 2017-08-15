@@ -109,6 +109,59 @@ void ofApp::setup(){
         cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
     }
     
+
+    
+    //major
+    /*for ( int i = 0; i < max_num_notes; i ++ ) {
+        if ( i % 7 == 0 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+        }
+        if ( i % 7 == 1 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
+        }
+        if ( i % 7 == 2 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 4;
+        }
+        if ( i % 7 == 3 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
+        }
+        if ( i % 7 == 4 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
+        }
+        if ( i % 7 == 5 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 9;
+        }
+        if ( i % 7 == 6 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 11;
+        }
+        cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
+    }
+    //minor
+    for ( int i = 0; i < max_num_notes; i ++ ) {
+        if ( i % 7 == 0 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+        }
+        if ( i % 7 == 1 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
+        }
+        if ( i % 7 == 2 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 3;
+        }
+        if ( i % 7 == 3 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
+        }
+        if ( i % 7 == 4 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
+        }
+        if ( i % 7 == 5 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 8;
+        }
+        if ( i % 7 == 6 ) {
+            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 10;
+        }
+        cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
+    }*/
+    
     notes.resize( num_notes );
     for ( int i = 0; i < num_notes; i ++ ) {
         notes[ i ] = scale_notes[ num_notes - 1 - i ];
@@ -131,17 +184,17 @@ void ofApp::setup(){
         saved_sketch_container[ i ].setHeight( sketch_container.height / 4 );
     }
     
-    fbo_sketch.allocate( sketch_container.width, sketch_container.height, GL_RGBA );
+    fbo_sketch.allocate( sketch_container.width, sketch_container.height, GL_RGB );
     fbo_sketch.begin();
     ofClear( 255, 255, 255 );
     fbo_sketch.end();
     
-    temp_pixels.allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), GL_RGBA );
+    temp_pixels.allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), GL_RGB );
     
     matrix_container.setPosition( sketch_container.getMaxX() + sketch_margin, sketch_margin );
     matrix_container.setSize( sketch_container.getWidth(), sketch_container.getHeight() );
     
-    fbo_matrix.allocate( matrix_container.width, matrix_container.height, GL_RGBA );
+    fbo_matrix.allocate( matrix_container.width, matrix_container.height, GL_RGB );
     fbo_sketch.begin();
     ofClear( 255, 255, 255 );
     fbo_sketch.end();
@@ -175,12 +228,19 @@ void ofApp::setup(){
     pressed.resize( max_num_hits, vector<bool>( max_num_notes, false ));
     _pressed.resize( max_num_hits, vector<bool>( max_num_notes, false ));
     
+    temp_pixels.allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), OF_PIXELS_RGB );
+    temp_pixels.setColor( ofColor::black );
+    
+    temp_texture.allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), GL_RGB );
+    temp_texture.loadData( temp_pixels );
+    
     latent_input_container.resize( 4 );
     latent_sketch.resize( 4 );
     for ( int i = 0; i < latent_input_container.size(); i ++ ) {
         latent_input_container[ i ].setWidth( saved_sketch_container[ 0 ].getWidth() );
         latent_input_container[ i ].setHeight( saved_sketch_container[ 0 ].getHeight() );
-        latent_sketch[ i ].allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), GL_RGBA );
+        latent_sketch[ i ].allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), GL_RGB );
+        latent_sketch[ i ].loadData( temp_pixels );
 
     }
     
@@ -200,11 +260,7 @@ void ofApp::setup(){
     bErase = false;
     _bErase = false;
     
-    temp_pixels.allocate( fbo_sketch.getWidth(), fbo_sketch.getHeight(), OF_IMAGE_COLOR );
-    temp_pixels.setColor( ofColor( 0 ));
-    
-    temp_texture.allocate( temp_pixels );
-    temp_texture.loadData( temp_pixels );
+
     
     ofSetCircleResolution( 100 );
     ofSetLineWidth( 5 );
@@ -648,7 +704,7 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
     {
         ofxUIToggle *toggle = (ofxUIToggle *) e.getToggle();
         bPlayLoop = toggle->getValue();
-        
+               
     }
     
     num_hits = bars_per_loop * beats_per_bar * hits_per_beat;
@@ -877,15 +933,7 @@ void ofApp::mousePressed(int x, int y, int button){
     else {
         draw_sketch = false;
     }
-    
-    for ( int i = 0; i < saved_sketch_container.size(); i ++ ) {
-        if ( saved_sketch_container[ i ].inside( x, y ) ) {
-            selected_sketch = i;
-            bSketchSelected = true;
-            temp_texture = saved_sketch[ i ];
-        }
-    }
-    
+
     for ( int i = 0; i < latent_sketch.size(); i ++ ) {
         if ( latent_input_container[ i ].inside( x, y ) ) {
             if ( bSketchSelected ) {
@@ -894,6 +942,16 @@ void ofApp::mousePressed(int x, int y, int button){
             }
         }
     }
+    
+    for ( int i = 0; i < saved_sketch.size(); i ++ ) {
+        if ( saved_sketch_container[ i ].inside( x, y ) ) {
+            selected_sketch = i;
+            temp_texture = saved_sketch[ i ];
+            bSketchSelected = true;
+        }
+    }
+    
+
     
 
     
@@ -934,6 +992,15 @@ void ofApp::windowResized(int w, int h){
         gui2->setPosition( 214,0 );
         gui2->autoSizeToFitWidgets();
     }*/
+    
+    /*latent_container.setWidth( 400 );
+    latent_container.setHeight( latent_container.getWidth() );
+    latent_container.setPosition( ofGetWidth() - latent_input_container[ 0 ].getWidth() - sketch_margin - latent_container.getWidth(), ofGetHeight() - sketch_margin - latent_container.getHeight());
+    
+    latent_input_container[ 0 ].setPosition( latent_container.getX() - latent_input_container[ 0 ].getWidth(), latent_container.getY() );
+    latent_input_container[ 1 ].setPosition( ofGetWidth() - latent_input_container[ 1 ].getWidth() - sketch_margin, latent_container.getY() );
+    latent_input_container[ 2 ].setPosition( latent_input_container[ 1 ].getX(), latent_container.getMaxY() - latent_input_container[ 2 ].getHeight() );
+    latent_input_container[ 3 ].setPosition( latent_input_container[ 0 ].getX(), latent_input_container[ 2 ].getY() );*/
 }
 
 //--------------------------------------------------------------
