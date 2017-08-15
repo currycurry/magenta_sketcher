@@ -125,6 +125,8 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
     
         int line_position;
     
+        int mode;
+    
         
     
 

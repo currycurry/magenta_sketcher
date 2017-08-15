@@ -89,78 +89,85 @@ void ofApp::setup(){
 
     scale_notes.resize( max_num_notes );
     
-    //pentatonic
-    for ( int i = 0; i < max_num_notes; i ++ ) {
-        if ( i % 5 == 0 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 5 );
+    mode = 0;
+    
+    if ( mode == 0 ) {
+        //pentatonic
+        for ( int i = 0; i < max_num_notes; i ++ ) {
+            if ( i % 5 == 0 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 );
+            }
+            if ( i % 5 == 1 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 2;
+            }
+            if ( i % 5 == 2 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 4;
+            }
+            if ( i % 5 == 3 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 7;
+            }
+            if ( i % 5 == 4 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 9;
+            }
+            cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
         }
-        if ( i % 5 == 1 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 2;
-        }
-        if ( i % 5 == 2 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 4;
-        }
-        if ( i % 5 == 3 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 7;
-        }
-        if ( i % 5 == 4 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 9;
-        }
-        cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
     }
     
-
-    
-    //major
-    /*for ( int i = 0; i < max_num_notes; i ++ ) {
-        if ( i % 7 == 0 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+    if ( mode == 1 ) {
+        //major
+        for ( int i = 0; i < max_num_notes; i ++ ) {
+            if ( i % 7 == 0 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+            }
+            if ( i % 7 == 1 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
+            }
+            if ( i % 7 == 2 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 4;
+            }
+            if ( i % 7 == 3 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
+            }
+            if ( i % 7 == 4 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
+            }
+            if ( i % 7 == 5 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 9;
+            }
+            if ( i % 7 == 6 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 11;
+            }
+            cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
         }
-        if ( i % 7 == 1 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
-        }
-        if ( i % 7 == 2 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 4;
-        }
-        if ( i % 7 == 3 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
-        }
-        if ( i % 7 == 4 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
-        }
-        if ( i % 7 == 5 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 9;
-        }
-        if ( i % 7 == 6 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 11;
-        }
-        cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
     }
-    //minor
-    for ( int i = 0; i < max_num_notes; i ++ ) {
-        if ( i % 7 == 0 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+    
+    if ( mode == 3 ) {
+        //minor
+        for ( int i = 0; i < max_num_notes; i ++ ) {
+            if ( i % 7 == 0 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+            }
+            if ( i % 7 == 1 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
+            }
+            if ( i % 7 == 2 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 3;
+            }
+            if ( i % 7 == 3 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
+            }
+            if ( i % 7 == 4 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
+            }
+            if ( i % 7 == 5 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 8;
+            }
+            if ( i % 7 == 6 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 10;
+            }
+            cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
         }
-        if ( i % 7 == 1 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
-        }
-        if ( i % 7 == 2 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 3;
-        }
-        if ( i % 7 == 3 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
-        }
-        if ( i % 7 == 4 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
-        }
-        if ( i % 7 == 5 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 8;
-        }
-        if ( i % 7 == 6 ) {
-            scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 10;
-        }
-        cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
-    }*/
+    }
     
     notes.resize( num_notes );
     for ( int i = 0; i < num_notes; i ++ ) {
@@ -707,6 +714,111 @@ void ofApp::guiEvent(ofxUIEventArgs &e)
                
     }
     
+    else if(name == "pentatonic")
+    {
+        mode = 0;
+        //pentatonic
+        for ( int i = 0; i < max_num_notes; i ++ ) {
+            if ( i % 5 == 0 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 );
+            }
+            if ( i % 5 == 1 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 2;
+            }
+            if ( i % 5 == 2 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 4;
+            }
+            if ( i % 5 == 3 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 7;
+            }
+            if ( i % 5 == 4 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 5 ) + 9;
+            }
+            cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
+        }
+        
+        notes.resize( num_notes );
+        for ( int i = 0; i < num_notes; i ++ ) {
+            notes[ i ] = scale_notes[ num_notes - 1 - i ];
+            cout << "notes: " << notes[ i ] << ", " << endl;
+            
+        }
+        
+    }
+    else if(name == "major")
+    {
+        mode = 1;
+        //major
+        for ( int i = 0; i < max_num_notes; i ++ ) {
+            if ( i % 7 == 0 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+            }
+            if ( i % 7 == 1 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
+            }
+            if ( i % 7 == 2 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 4;
+            }
+            if ( i % 7 == 3 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
+            }
+            if ( i % 7 == 4 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
+            }
+            if ( i % 7 == 5 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 9;
+            }
+            if ( i % 7 == 6 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 11;
+            }
+            cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
+        }
+        notes.resize( num_notes );
+        for ( int i = 0; i < num_notes; i ++ ) {
+            notes[ i ] = scale_notes[ num_notes - 1 - i ];
+            cout << "notes: " << notes[ i ] << ", " << endl;
+            
+        }
+        
+    }
+    else if(name == "minor")
+    {
+        mode = 2;
+        //minor
+        for ( int i = 0; i < max_num_notes; i ++ ) {
+            if ( i % 7 == 0 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 );
+            }
+            if ( i % 7 == 1 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 2;
+            }
+            if ( i % 7 == 2 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 3;
+            }
+            if ( i % 7 == 3 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 5;
+            }
+            if ( i % 7 == 4 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 7;
+            }
+            if ( i % 7 == 5 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 8;
+            }
+            if ( i % 7 == 6 ) {
+                scale_notes[ i ] = tonic + 12 * floor( i / 7 ) + 10;
+            }
+            cout << "scale_notes: " << scale_notes[ i ] << ", " << endl;
+        }
+        notes.resize( num_notes );
+        for ( int i = 0; i < num_notes; i ++ ) {
+            notes[ i ] = scale_notes[ num_notes - 1 - i ];
+            cout << "notes: " << notes[ i ] << ", " << endl;
+            
+        }
+
+        
+    }
+    
     num_hits = bars_per_loop * beats_per_bar * hits_per_beat;
     hit_interval = 60000 / ( bpm * hits_per_beat ); // ms/hit
     loopPlayer.update( num_hits, num_notes, hit_interval, channel, pressed, notes, matrix, midiOut );
@@ -757,7 +869,7 @@ void ofApp::setGUI1()
     scale.push_back( "pentatonic" );
     scale.push_back( "major" );
     scale.push_back( "minor" );
-    scale.push_back( "diatonic" );
+    /*scale.push_back( "diatonic" );
     scale.push_back( "melodic" );
     scale.push_back( "harmonic" );
     scale.push_back( "phrygian" );
@@ -765,7 +877,7 @@ void ofApp::setGUI1()
     scale.push_back( "mixolydian" );
     scale.push_back( "dorian" );
     scale.push_back( "ionian" );
-    scale.push_back( "locrian" );
+    scale.push_back( "locrian" );*/
     ddl = gui1->addDropDownList("CHOOSE MODE", scale);
     ddl->setAllowMultiple(false);
 
