@@ -384,7 +384,7 @@ void ofApp::update(){
                 else {
                     box_color[ i ][ j ] = off_color;
                 }
-                
+                midiOut.sendNoteOff( channel, notes[ j ], 100 );
                 pressed[ i ][ j ] = false;
             }
         }

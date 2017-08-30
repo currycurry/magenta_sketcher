@@ -30,7 +30,7 @@ void LoopPlaybackThread::stop() {
     for ( int i = 0; i < num_hits; i ++ ) {
         for ( int j = 0; j < num_notes; j ++ ) {
             if ( pressed[ i ][ j ] ) {
-                midiOut.sendNoteOff( channel, notes[ j ]);
+                midiOut.sendNoteOff( channel, notes[ j ], 100 );
             }
         }
     }
@@ -47,6 +47,12 @@ void LoopPlaybackThread::update( int h, int n, int i, int c, vector<vector<bool>
     midiOut = mi;
     matrix = mat;
     playW = matrix[ 0 ][ 0 ].getWidth();
+    
+    /*ofSleepMillis( hit_interval );
+    
+    for ( int j = 0; j < num_notes; j ++ ) {
+        midiOut.sendNoteOff( channel, notes[ j ], 100 );
+    }*/
 }
 
 void LoopPlaybackThread::draw() {
@@ -62,6 +68,13 @@ void LoopPlaybackThread::threadedFunction() {
                 if ( pressed[ i ][ j ] ) {
                     midiOut.sendNoteOn( channel, notes[ j ], 100 );
                 }
+                if ( i > 0 && pressed[ i - 1 ][ j ] ) {
+                    midiOut.sendNoteOff( channel, notes[ j ], 100 );
+                }
+                else if ( i == 0 && pressed[ num_hits ][ j ] ) {
+                    midiOut.sendNoteOff( channel, notes[ j ], 100 );
+                }
+                
             }
             ofSleepMillis( hit_interval );
         }
